@@ -1,6 +1,7 @@
 export type BlockId = "hero" | "about" | "stack" | "projects" | "stats" | "streak" | "socials" | "wave" | "buttons";
 export type ShapeName = "cookie" | "cookie12" | "clover" | "sunny" | "flower" | "pill" | "soft" | "gem";
 export type SchemeName = "tonalSpot" | "vibrant" | "expressive" | "fidelity" | "monochrome";
+export type ThemeId = "material-3" | "minimalism" | "warm-minimalism" | "glassmorphism" | "neumorphism" | "bento-grid" | "retropixel";
 export type Lang = "en" | "ru";
 
 export interface Item {
@@ -29,6 +30,7 @@ export interface Config {
   login: string;
   seed: string;
   seedFromAvatar?: boolean;
+  theme: ThemeId;
   scheme: SchemeName;
   motion: boolean;
   iconFill?: boolean;

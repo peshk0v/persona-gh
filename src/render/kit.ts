@@ -1,6 +1,7 @@
 import metrics from "./metrics.json";
 import { FONT, FONT_CYR } from "./fontdata";
 import type { Icons, Palette, ShapeName } from "./types";
+import type { ChipSpec, ChipVariant, SurfaceSpec, Theme } from "./themes/types";
 
 const METRICS = metrics as Record<string, Record<string, number>>;
 
@@ -9,20 +10,21 @@ export function esc(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
 
-export function textWidth(s: string, size: number, weight = 400) {
+export function textWidth(s: string, size: number, weight = 400, scale = 1, mono = false) {
+  if (mono) return [...s].length * 0.6 * size * scale;
   const key = [400, 500, 600, 700].reduce((a, b) => (Math.abs(b - weight) < Math.abs(a - weight) ? b : a));
   const table = METRICS[String(key)];
   let w = 0;
   for (const c of s) w += table[c] ?? 0.55;
-  return w * size;
+  return w * size * scale;
 }
 
-export function wrap(s: string, size: number, width: number, weight = 400, lines = 2) {
+export function wrap(s: string, size: number, width: number, weight = 400, lines = 2, scale = 1, mono = false) {
   const out: string[] = [];
   let cur = "";
   for (const word of s.split(/\s+/).filter(Boolean)) {
     const trial = cur ? `${cur} ${word}` : word;
-    if (textWidth(trial, size, weight) <= width || !cur) cur = trial;
+    if (textWidth(trial, size, weight, scale, mono) <= width || !cur) cur = trial;
     else {
       out.push(cur);
       cur = word;
@@ -32,23 +34,43 @@ export function wrap(s: string, size: number, width: number, weight = 400, lines
   if (out.length > lines) {
     out.length = lines;
     let last = out[lines - 1];
-    while (textWidth(last + "…", size, weight) > width && last.includes(" ")) last = last.slice(0, last.lastIndexOf(" "));
+    while (textWidth(last + "…", size, weight, scale, mono) > width && last.includes(" ")) last = last.slice(0, last.lastIndexOf(" "));
     out[lines - 1] = last + "…";
   }
   return out;
 }
 
-export function fit(s: string, size: number, width: number, weight = 400) {
-  if (textWidth(s, size, weight) <= width) return s;
+export function fit(s: string, size: number, width: number, weight = 400, scale = 1, mono = false) {
+  if (textWidth(s, size, weight, scale, mono) <= width) return s;
   let t = s;
-  while (t.length > 1 && textWidth(t + "…", size, weight) > width) t = t.slice(0, -1);
+  while (t.length > 1 && textWidth(t + "…", size, weight, scale, mono) > width) t = t.slice(0, -1);
   return t.trimEnd() + "…";
 }
 
+function parseColor(c: string): [number, number, number, number] {
+  const s = c.trim();
+  if (s.startsWith("#")) {
+    const h = s.slice(1);
+    const f = h.length === 3 ? h.split("").map((x) => x + x).join("") : h.slice(0, 6);
+    const r = parseInt(f.slice(0, 2), 16) || 0;
+    const g = parseInt(f.slice(2, 4), 16) || 0;
+    const b = parseInt(f.slice(4, 6), 16) || 0;
+    return [r, g, b, 1];
+  }
+  const m = /^rgba?\(([^)]+)\)$/i.exec(s);
+  if (m) {
+    const p = m[1].split(",").map((x) => Number(x.trim()));
+    return [p[0] || 0, p[1] || 0, p[2] || 0, p[3] ?? 1];
+  }
+  return [0, 0, 0, 1];
+}
+
 export function mix(a: string, b: string, t: number) {
-  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
-  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
-  return "#" + pa.map((x, i) => Math.round(x + (pb[i] - x) * t).toString(16).padStart(2, "0")).join("");
+  const pa = parseColor(a);
+  const pb = parseColor(b);
+  const out = pa.map((x, i) => (i < 3 ? Math.round(x + (pb[i] - x) * t) : +(x + (pb[i] - x) * t).toFixed(3)));
+  if (out[3] < 1) return `rgba(${out[0]},${out[1]},${out[2]},${out[3]})`;
+  return "#" + out.slice(0, 3).map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
 // Shapes
@@ -88,6 +110,64 @@ export function radiiPath(rs: number[], cx: number, cy: number, r: number) {
 
 export function shape(kind: ShapeName, cx: number, cy: number, r: number) {
   return radiiPath(radii(kind), cx, cy, r);
+}
+
+// Square / rounded-square frame for themes that do not use organic blobs.
+export function framePath(kind: ShapeName | "square" | undefined, cx: number, cy: number, r: number, rx = 0) {
+  if (kind && kind === "square") {
+    const x = cx - r;
+    const y = cy - r;
+    const s = r * 2;
+    const k = Math.max(0, Math.min(rx, r));
+    if (k <= 0) return `M${x} ${y} H${x + s} V${y + s} H${x} Z`;
+    return (
+      `M${x + k} ${y} H${x + s - k} Q${x + s} ${y} ${x + s} ${y + k}` +
+      ` V${y + s - k} Q${x + s} ${y + s} ${x + s - k} ${y + s}` +
+      ` H${x + k} Q${x} ${y + s} ${x} ${y + s - k}` +
+      ` V${y + k} Q${x} ${y} ${x + k} ${y} Z`
+    );
+  }
+  return shape((kind ?? "cookie") as ShapeName, cx, cy, r);
+}
+
+// Surface primitive. Emits an optional hard shadow, the main shape and inner frames.
+export function surface(spec: SurfaceSpec, x: number, y: number, w: number, h: number, extra = "") {
+  const attrs = (sx: number, sy: number) => {
+    let a = `x="${+sx.toFixed(2)}" y="${+sy.toFixed(2)}" width="${+w.toFixed(2)}" height="${+h.toFixed(2)}" rx="${spec.rx}"`;
+    if (spec.stroke) a += ` stroke="${spec.stroke}" stroke-width="${spec.strokeWidth ?? 1}"`;
+    if (spec.filter) a += ` filter="${spec.filter}"`;
+    if (spec.opacity !== undefined) a += ` opacity="${spec.opacity}"`;
+    return a;
+  };
+  const bleed = !!spec.shadow && x === 0 && y === 0;
+  let out = "";
+  if (spec.shadow && !bleed) {
+    out += `<rect ${attrs(x + spec.shadow.dx, y + spec.shadow.dy)} fill="${spec.shadow.color}"/>`;
+  }
+  out += `<rect ${attrs(x, y)} fill="${spec.fill}"${extra}/>`;
+  if (spec.shadow && bleed) {
+    const d = Math.max(spec.shadow.dx, spec.shadow.dy);
+    out += `<rect x="${x}" y="${+(y + h - d).toFixed(2)}" width="${+w.toFixed(2)}" height="${d}" fill="${spec.shadow.color}"/>`;
+    out += `<rect x="${+(x + w - d).toFixed(2)}" y="${y}" width="${d}" height="${+h.toFixed(2)}" fill="${spec.shadow.color}"/>`;
+  }
+  for (const b of spec.innerBorders ?? []) {
+    const rx = Math.max(0, spec.rx - b.inset);
+    out +=
+      `<rect x="${+(x + b.inset).toFixed(2)}" y="${+(y + b.inset).toFixed(2)}" ` +
+      `width="${+(w - b.inset * 2).toFixed(2)}" height="${+(h - b.inset * 2).toFixed(2)}" ` +
+      `rx="${rx}" fill="none" stroke="${b.stroke}" stroke-width="${b.width}"/>`;
+  }
+  return out;
+}
+
+export function chipSurface(spec: ChipSpec, x: number, y: number, w: number, h: number) {
+  return surface(
+    { fill: spec.fill, rx: spec.rx, stroke: spec.stroke, strokeWidth: spec.strokeWidth, filter: spec.filter, shadow: spec.shadow },
+    x,
+    y,
+    w,
+    h,
+  );
 }
 
 // Icons
@@ -140,47 +220,65 @@ const CSS = `
 @keyframes wave{from{transform:translateX(0)}to{transform:translateX(-48px)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}`;
 
-export function svg(w: number, h: number, body: string, title: string, motion = true, extra = "") {
-  const cyr = /[Ѐ-ӿ]/.test(body)
+export interface SvgOptions {
+  extra?: string;
+  th?: Theme;
+  dark?: boolean;
+  p?: Palette;
+  /** Draw the theme backdrop. Disable for standalone cards that need transparent margins. */
+  backdrop?: boolean;
+}
+
+export function svg(w: number, h: number, body: string, title: string, motion = true, opts: SvgOptions = {}) {
+  const th = opts.th;
+  const useEmbedded = !th || th.embedFont;
+  const cyr = useEmbedded && /[Ѐ-ӿ]/.test(body)
     ? `@font-face{font-family:R;src:url(data:font/woff2;base64,${FONT_CYR}) format('woff2');font-weight:400 800}`
     : "";
-  const fonts = body.includes("<text")
+  const fonts = useEmbedded && body.includes("<text")
     ? `@font-face{font-family:G;src:url(data:font/woff2;base64,${FONT}) format('woff2');font-weight:400 800}` + cyr
     : "";
+  const family = useEmbedded
+    ? `G,R,'Google Sans','Segoe UI',Roboto,sans-serif;font-variation-settings:'ROND' 100`
+    : `${th!.fontFamily}`;
   const css =
     fonts +
-    `text{font-family:G,R,'Google Sans','Segoe UI',Roboto,sans-serif;font-variation-settings:'ROND' 100}` +
+    `text{font-family:${family}}` +
     CSS +
-    extra +
+    (opts.extra ?? "") +
     (motion ? "" : "*{animation:none!important}");
+  const defs = th?.defs && opts.p ? th.defs(opts.p, !!opts.dark) : "";
+  const backdrop = th?.backdrop && opts.p && opts.backdrop !== false ? th.backdrop(opts.p, !!opts.dark, w, h) : "";
+  const content = (defs ? `<defs>${defs}</defs>` : "") + backdrop + body;
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
     `width="${+w.toFixed(2)}" height="${+h.toFixed(2)}" viewBox="0 0 ${+w.toFixed(2)} ${+h.toFixed(2)}" role="img" aria-label="${esc(title)}">` +
-    `<title>${esc(title)}</title><style>${css}</style>${body}</svg>`
+    `<title>${esc(title)}</title><style>${css}</style>${content}</svg>`
   );
 }
 
 export function chip(
   icons: Icons, p: Palette, x: number, y: number, label: string,
-  o: { icon?: string; delay?: number; h?: number; size?: number; style?: "tonal" | "outlined" } = {},
+  o: { icon?: string; delay?: number; h?: number; size?: number; style?: ChipVariant; th?: Theme; dark?: boolean; scale?: number; mono?: boolean } = {},
 ): [string, number] {
   const h = o.h ?? 36;
   const size = o.size ?? 15;
   const pad = 14;
   const iw = o.icon ? 18 : 0;
   const gap = o.icon ? 8 : 0;
-  const w = pad * 2 + iw + gap + textWidth(label, size, 500);
-  let bg: string;
-  let fg: string;
-  if (o.style === "tonal") {
-    bg = `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="10" fill="${p.secondaryContainer}"/>`;
-    fg = p.onSecondaryContainer;
-  } else {
-    bg = `<rect x="${x + 0.5}" y="${y + 0.5}" width="${(w - 1).toFixed(1)}" height="${h - 1}" rx="10" fill="${p.surfaceContainerLow}" stroke="${p.outlineVariant}"/>`;
-    fg = p.onSurfaceVariant;
-  }
-  let body = bg;
+  const w = pad * 2 + iw + gap + textWidth(label, size, 500, o.scale ?? 1, !!o.mono);
+  const variant: ChipVariant = o.style ?? "outlined";
+  const spec = o.th
+    ? o.th.chip(p, !!o.dark, variant)
+    : variant === "filled"
+      ? { fill: p.primary, fg: p.onPrimary, rx: 10 }
+      : variant === "tertiary"
+        ? { fill: p.tertiaryContainer, fg: p.onTertiaryContainer, rx: 11 }
+        : variant === "tonal"
+          ? { fill: p.secondaryContainer, fg: p.onSecondaryContainer, rx: 10 }
+          : { fill: p.surfaceContainerLow, fg: p.onSurfaceVariant, rx: 10, stroke: p.outlineVariant, strokeWidth: 1 };
+  let body = chipSurface(spec, x, y, w, h);
   if (o.icon) body += icon(icons, o.icon, x + pad, y + (h - 18) / 2, 18, p.primary);
-  body += txt(x + pad + iw + gap, y + h / 2 + size * 0.36, label, size, fg, { weight: 500 });
+  body += txt(x + pad + iw + gap, y + h / 2 + size * 0.36, label, size, spec.fg, { weight: 500 });
   return [pop(body, o.delay ?? 0), w];
 }

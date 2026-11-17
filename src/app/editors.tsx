@@ -1,7 +1,8 @@
 import { AnimatePresence, motion, Reorder, useDragControls } from "motion/react";
 import { useState } from "react";
 import { projectList, projectView } from "../render/blocks";
-import type { Config, Data, Repo, SchemeName } from "../render";
+import { THEME_IDS } from "../render";
+import type { Config, Data, Repo, SchemeName, ThemeId } from "../render";
 import type { Dict } from "./i18n";
 import { activePreset, applyPreset, PRESETS, type PresetId } from "./presets";
 import { bouncy, Button, Field, Glyph, IconButton, IconSelect, ItemList, Section, Segmented, ShapePicker, spring, Switch } from "./ui";
@@ -302,6 +303,30 @@ function Style({ c, set, t, avatarSeed, onReset, onImage }: Props & { avatarSeed
   const preset = activePreset(c);
   return (
     <>
+      <Section title={t.theme}>
+        <div className="themes">
+          {THEME_IDS.map((id: ThemeId) => (
+            <motion.button
+              key={id}
+              type="button"
+              className={`theme-card${c.theme === id ? " on" : ""}`}
+              data-skin={id}
+              onClick={() => set((c) => ({ ...c, theme: id }))}
+              whileTap={{ scale: 0.96 }}
+              transition={bouncy}
+            >
+              <span className="theme-preview" aria-hidden="true">
+                <span className="tp-blob" />
+                <span className="tp-hero" />
+                <span className="tp-line" />
+                <span className="tp-chips"><i /><i /><i /></span>
+              </span>
+              <span className="theme-name">{t.themes[id]}</span>
+              <span className="theme-desc">{t.themeDesc[id]}</span>
+            </motion.button>
+          ))}
+        </div>
+      </Section>
       <Section title={t.templates}>
         <div className="presets">
           {(Object.keys(PRESETS) as PresetId[]).map((id) => (

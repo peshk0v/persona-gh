@@ -226,7 +226,7 @@ async function actionData(login: string): Promise<Partial<Data> | null> {
 }
 
 // Zip
-const WORKFLOW = `name: Expressive Profile
+const WORKFLOW = `name: persona-gh
 
 on:
   schedule:
@@ -236,7 +236,7 @@ on:
     paths:
       - profile.json
       - .profile/icons.json
-      - .github/workflows/expressive-profile.yml
+      - .github/workflows/persona-gh.yml
 
 permissions:
   contents: write
@@ -246,7 +246,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: metawka/expressive-profile@v1
+      - uses: peshk0v/persona-gh@main
         with:
           token: \${{ secrets.PROFILE_TOKEN || github.token }}
 `;
@@ -257,7 +257,7 @@ export function profileFiles(c: Config, d: Data, avatar: string | null) {
   files["README.md"] = readme(c, d, svgs);
   files["profile.json"] = JSON.stringify(c, null, 2) + "\n";
   files[".profile/icons.json"] = JSON.stringify(pickIcons(store, usedIcons(c, d)));
-  files[".github/workflows/expressive-profile.yml"] = WORKFLOW;
+  files[".github/workflows/persona-gh.yml"] = WORKFLOW;
   return files;
 }
 

@@ -9,7 +9,7 @@ const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 async function graphql<T>(query: string, variables: object = {}): Promise<T> {
   const r = await fetch("https://api.github.com/graphql", {
     method: "POST",
-    headers: { Authorization: `bearer ${token}`, "User-Agent": "expressive-profile" },
+    headers: { Authorization: `bearer ${token}`, "User-Agent": "persona-gh" },
     body: JSON.stringify({ query, variables }),
   });
   const j = await r.json();

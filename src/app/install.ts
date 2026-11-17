@@ -107,7 +107,7 @@ export async function install(token: string, login: string, files: Record<string
   step(2);
   const t = await gh(token, `${full}/git/trees`, { method: "POST", body: JSON.stringify({ base_tree: commit.body.tree.sha, tree }) });
   if (t.status !== 201) throw new InstallError("upload");
-  const c = await gh(token, `${full}/git/commits`, { method: "POST", body: JSON.stringify({ message: "Added Expressive Profile", tree: t.body.sha, parents: [head] }) });
+  const c = await gh(token, `${full}/git/commits`, { method: "POST", body: JSON.stringify({ message: "Added persona-gh", tree: t.body.sha, parents: [head] }) });
   if (c.status !== 201) throw new InstallError("upload");
   const up = await gh(token, `${full}/git/refs/heads/${branch}`, { method: "PATCH", body: JSON.stringify({ sha: c.body.sha }) });
   if (up.status !== 200) throw new InstallError("upload");

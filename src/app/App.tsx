@@ -3,7 +3,7 @@ import { AnimatePresence, motion, Reorder, useDragControls } from "motion/react"
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { projectList } from "../render/blocks";
 import { deflateSync, inflateSync, strFromU8, strToU8 } from "fflate";
-import { BLOCKS, defaults, palette, render, REPO_URL, slug, usedIcons, type BlockId, type Config, type Data, type Lang, type ShapeName } from "../render";
+import { BLOCKS, defaults, getTheme, render, REPO_URL, slug, usedIcons, type BlockId, type Config, type Data, type Lang, type ShapeName } from "../render";
 import { buildZip, DEMO, hasIcon, LoadError, loadAllIcons, loadProfile, profileFiles, store } from "./data";
 import { existingReadme, install, InstallError, requestCode, waitForToken, whoami, type DeviceCode } from "./install";
 import { SheetBody, type SheetId } from "./editors";
@@ -41,6 +41,7 @@ function migrate(c: Config | null, lang: Lang): Config {
   return {
     ...base,
     ...c,
+    theme: c.theme ?? base.theme,
     hero: { ...base.hero, ...c.hero },
     about: { ...base.about, ...c.about },
     stack: { ...base.stack, ...c.stack },
@@ -105,6 +106,7 @@ function remixFrom(theirs: Config, lang: Lang, login: string): Config {
     ...base,
     seed: theirs.seed ?? base.seed,
     seedFromAvatar: false,
+    theme: theirs.theme ?? base.theme,
     scheme: theirs.scheme ?? base.scheme,
     motion: theirs.motion ?? base.motion,
     order: theirs.order ?? base.order,
@@ -199,7 +201,7 @@ export default function App() {
     if (usedIcons(config, data).some((n) => !hasIcon(n))) loadAllIcons().then(() => setIconsTick((x) => x + 1));
   }, [config, data]);
 
-  const p = useMemo(() => palette(config.seed, config.scheme, dark), [config.seed, config.scheme, dark]);
+  const p = useMemo(() => getTheme(config.theme).palette(config.seed, config.scheme, dark), [config.theme, config.seed, config.scheme, dark]);
   useEffect(() => {
     const root = document.documentElement;
     for (const [k, v] of Object.entries(p)) root.style.setProperty(`--${kebab(k)}`, v);
@@ -438,7 +440,7 @@ export default function App() {
               ))}
             </Reorder.Group>
             <div className="credit">
-              <img draggable={false} src={src("credit")} alt="Made with Expressive Profile" style={{ width: width("credit") * Math.min(1, k), height: width("credit") * Math.min(1, k) * ratio("credit") }} />
+              <img draggable={false} src={src("credit")} alt="Made with persona-gh" style={{ width: width("credit") * Math.min(1, k), height: width("credit") * Math.min(1, k) * ratio("credit") }} />
             </div>
           </div>
 
@@ -502,7 +504,7 @@ function Logo() {
       <motion.span className="logo-mark" whileHover={{ rotate: 90, scale: 1.1 }} transition={bouncy}>
         <Morph shape={shape} size={34} />
       </motion.span>
-      <span className="logo-text">Expressive Profile</span>
+      <span className="logo-text">persona-gh</span>
     </div>
   );
 }

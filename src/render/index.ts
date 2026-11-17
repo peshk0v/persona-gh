@@ -1,10 +1,12 @@
 import { about, AUTO_ICONS, buttons, card, credit, hero, projectList, projectView, SITE_URL, socials, stack, stats, streak, wave } from "./blocks";
 import { esc } from "./kit";
-import { palette } from "./palette";
+import { getTheme } from "./themes";
 import type { BlockId, Config, Data, Icons, Lang } from "./types";
 
 export * from "./types";
 export { palette } from "./palette";
+export { getTheme, THEMES, THEME_IDS } from "./themes";
+export type { Theme } from "./themes";
 export { REPO_URL, SITE_URL } from "./blocks";
 
 export const BLOCKS: BlockId[] = ["hero", "socials", "about", "stack", "projects", "stats", "streak", "wave", "buttons"];
@@ -17,6 +19,7 @@ export function defaults(login: string, lang: Lang): Config {
     login,
     seed: "#FF5CA8",
     seedFromAvatar: true,
+    theme: "material-3",
     scheme: "tonalSpot",
     motion: true,
     iconFill: true,
@@ -159,9 +162,11 @@ export function render(c: Config, d: Data, all: Icons, avatar: string | null, th
   const icons = c.iconFill === false ? all : withFill(all);
   const files: Record<string, string> = {};
   const repos = projectList(c, d);
+  const th = getTheme(c.theme);
   for (const theme of themes) {
-    const p = palette(c.seed, c.scheme, theme === "dark");
-    const ctx = { c, d, p, i: icons };
+    const dark = theme === "dark";
+    const p = th.palette(c.seed, c.scheme, dark);
+    const ctx = { c, d, p, i: icons, th, dark };
     const put = (name: string, svg: string) => (files[`assets/${name}-${theme}.svg`] = svg);
     put("hero", hero(ctx, avatar));
     put("about", about(ctx));
@@ -222,6 +227,6 @@ export function readme(c: Config, d: Data, files: Record<string, string>) {
       parts.push(linkRow(files, "button", links, "auto", "&nbsp;&nbsp;"));
     }
   }
-  parts.push(`<a href="${SITE_URL}?from=${encodeURIComponent(c.login)}">${pic("credit", "Made with Expressive Profile", "auto")}</a>`);
+  parts.push(`<a href="${SITE_URL}?from=${encodeURIComponent(c.login)}">${pic("credit", "Made with persona-gh", "auto")}</a>`);
   return '<div align="center">\n\n' + parts.join("\n\n") + "\n\n</div>\n";
 }

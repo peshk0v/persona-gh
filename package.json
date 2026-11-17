@@ -1,7 +1,17 @@
 {
-  "name": "expressive-profile",
+  "name": "persona-gh",
   "private": true,
   "version": "0.1.0",
+  "description": "Multi-theme GitHub profile README generator, starting with the Material 3 Expressive style",
+  "author": "peshk0v",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peshk0v/persona-gh.git"
+  },
+  "bugs": {
+    "url": "https://github.com/peshk0v/persona-gh/issues"
+  },
+  "homepage": "https://peshk0v.github.io/persona-gh/",
   "type": "module",
   "scripts": {
     "assets": "node scripts/assets.mjs",
