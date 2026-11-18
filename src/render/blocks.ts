@@ -109,20 +109,37 @@ export function hero(ctx: Ctx, avatar: string | null) {
   const room = W - x - 24;
   const scale = th.textScale ?? 1;
   const size = Math.min(68, room / Math.max(1, textWidth(name, 1, 700, ms(th, 700), th.mono)));
-  b.push(txt(x, 92, fit(c.hero.greeting, 22, W - x - 24, 500, ms(th, 500), th.mono), 22, p.onSurfaceVariant, { weight: 500, cls: "up", delay: 0.1 }));
+  const lines = wrap(c.hero.subtitle, 19, 430, 400, 2, scale, th.mono);
+  // Stack the text column, then center it on the avatar so every theme keeps the same balance
+  // and the chips never hang below the avatar.
+  const subLH = 26;
+  const chipH = 36;
+  const gapName = 8;
+  const gapSub = 8;
+  const gapChips = 12;
+  const nameH = size * 0.98;
+  const blockH =
+    26 + gapName + nameH +
+    (lines.length ? gapSub + lines.length * subLH : 0) +
+    (c.hero.chips.length ? gapChips + chipH : 0);
+  const top = Math.max(36, Math.round(cy - 5 - blockH / 2));
+  const nameTop = top + 26 + gapName;
+  const nameBase = nameTop + size * 0.78;
+  const subBase = nameTop + nameH + gapSub + 19;
+  const chipsTop = nameTop + nameH + (lines.length ? gapSub + lines.length * subLH : 0) + gapChips;
+  b.push(txt(x, top + 18, fit(c.hero.greeting, 22, W - x - 24, 500, ms(th, 500), th.mono), 22, p.onSurfaceVariant, { weight: 500, cls: "up", delay: 0.1 }));
   b.push(
     th.embedFont
-      ? pop(txt(x - 3, 156, name, size, p.onSurface, { cls: "wght" }), 0.2, "up")
-      : pop(txt(x - 3, 156, name, size, p.onSurface, { weight: th.heading.weight, cls: "up" }), 0.2, "up"),
+      ? pop(txt(x - 3, nameBase, name, size, p.onSurface, { cls: "wght" }), 0.2, "up")
+      : pop(txt(x - 3, nameBase, name, size, p.onSurface, { weight: th.heading.weight, cls: "up" }), 0.2, "up"),
   );
-  const lines = wrap(c.hero.subtitle, 19, 430, 400, 2, scale, th.mono);
   let extra = "";
   if (c.hero.typing && c.motion && lines.join("")) {
-    const [body, css] = typing(lines, x, p, scale, th.mono);
+    const [body, css] = typing(lines, x, p, scale, th.mono, subBase);
     b.push(body);
     extra = css;
   } else lines.forEach((line, n) => {
-    b.push(txt(x, 194 + n * 26, line, 19, p.onSurfaceVariant, { cls: "up", delay: 0.35 + n * 0.08 }));
+    b.push(txt(x, subBase + n * subLH, line, 19, p.onSurfaceVariant, { cls: "up", delay: 0.35 + n * 0.08 }));
   });
   let cx2 = x;
   c.hero.chips.forEach((item, n) => {
@@ -130,7 +147,7 @@ export function hero(ctx: Ctx, avatar: string | null) {
     const avail = W - 24 - cx2;
     if (avail < 70) return;
     const label = fit(item.label, 15, avail - 28 - (item.icon ? 26 : 0), 500, scale, th.mono);
-    const [g, w] = chip(i, p, cx2, 236, label, { icon: item.icon, delay: 0.6 + n * 0.1, style: "tonal", th, dark, scale, mono: th.mono });
+    const [g, w] = chip(i, p, cx2, chipsTop, label, { icon: item.icon, delay: 0.6 + n * 0.1, style: "tonal", th, dark, scale, mono: th.mono });
     if (cx2 + w > W - 24) return;
     b.push(g);
     cx2 += w + 8;
@@ -138,7 +155,7 @@ export function hero(ctx: Ctx, avatar: string | null) {
   return svg(W, h, b.join(""), `${c.hero.greeting} ${name}`, c.motion, { extra, th, dark, p, backdrop: true });
 }
 
-function typing(lines: string[], x: number, p: Palette, scale = 1, mono = false): [string, string] {
+function typing(lines: string[], x: number, p: Palette, scale = 1, mono = false, y0 = 194): [string, string] {
   const t0 = 0.7;
   const step = 0.05;
   const chars = lines.map((l) => [...l]);
@@ -155,7 +172,7 @@ function typing(lines: string[], x: number, p: Palette, scale = 1, mono = false)
     `<animate attributeName="${attr}" values="${values.join(";")}" keyTimes="${times}" calcMode="discrete" dur="${dur.toFixed(2)}s" fill="freeze"/>`;
   const out: string[] = [];
   lines.forEach((line, li) => {
-    const y = 194 + li * 26;
+    const y = y0 + li * 26;
     const full = textWidth(line, 19, 400, scale, mono) + 4;
     const widths = ["0", ...ks.map((k) => revealed(li, k).toFixed(1))];
     out.push(`<clipPath id="tc${li}"><rect x="${x - 2}" y="${y - 22}" width="${full}" height="30">${smil("width", widths)}</rect></clipPath>`);
@@ -165,7 +182,7 @@ function typing(lines: string[], x: number, p: Palette, scale = 1, mono = false)
   const pos = (k: number) => {
     let li = chars.findIndex((_, i) => k <= starts[i] + chars[i].length);
     if (li < 0) li = last;
-    return [x + revealed(li, k), 194 + li * 26];
+    return [x + revealed(li, k), y0 + li * 26];
   };
   const [fx, fy] = pos(n);
   const moves = [pos(0), ...ks.map(pos)].map(([cx, cy]) => `${(cx - fx).toFixed(1)} ${cy - fy}`);
@@ -181,20 +198,31 @@ function typing(lines: string[], x: number, p: Palette, scale = 1, mono = false)
 // About
 export function about(ctx: Ctx) {
   const { c, p, i, th, dark } = ctx;
-  const row = 54;
-  const h = 92 + row * c.about.items.length;
+  const size = 17;
+  const lh = 22;
+  const gap = 8;
+  const scale = ms(th, 500);
+  // Rows grow with their text instead of cutting it: up to six lines, each one taller.
+  const rows = c.about.items.map((item) => wrap(item.label, size, W - 130, 500, 6, scale, th.mono));
+  const cards = rows.map((lines) => Math.max(46, lines.length * lh + 14));
+  const h = 100 + cards.reduce((a, b) => a + b, 0) + gap * (rows.length - 1);
   const b = [surface(th.row(p, dark), 0, 0, W, h)];
   b.push(sectionTitle(28, 26, c.about.title, "favorite", ctx));
-  c.about.items.forEach((item, n) => {
-    const y = 86 + n * row;
-    const mid = y + (row - 8) / 2;
+  let y = 86;
+  rows.forEach((lines, n) => {
+    const cardH = cards[n];
+    const mid = y + cardH / 2;
     b.push(`<g class="up" style="animation-delay:${(0.15 + n * 0.1).toFixed(2)}s">`);
-    b.push(surface(th.inner(p, dark), 28, y, W - 56, row - 8));
+    b.push(surface(th.inner(p, dark), 28, y, W - 56, cardH));
     if (th.badge === "circle") b.push(`<circle cx="54" cy="${mid}" r="15" fill="${p.secondaryContainer}"/>`);
     else b.push(`<path d="${framePath("square", 54, mid, 15, th.radius.cell)}" fill="${p.secondaryContainer}"/>`);
-    b.push(icon(i, item.icon, 45, mid - 9, 18, p.onSecondaryContainer));
-    b.push(txt(82, mid + 6, fit(item.label, 17, W - 130, 500, ms(th, 500), th.mono), 17, p.onSurface, { weight: 500 }));
+    b.push(icon(i, c.about.items[n].icon, 45, mid - 9, 18, p.onSecondaryContainer));
+    lines.forEach((line, li) => {
+      const base = mid + 6 - ((lines.length - 1) * lh) / 2 + li * lh;
+      b.push(txt(82, base, line, size, p.onSurface, { weight: 500 }));
+    });
     b.push("</g>");
+    y += cardH + gap;
   });
   return svg(W, h, b.join(""), c.about.title, c.motion, { th, dark, p, backdrop: true });
 }

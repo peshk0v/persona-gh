@@ -62,6 +62,8 @@ Signing in uses the GitHub device flow with the `public_repo` and `workflow` sco
 
 The first workflow run replaces the preview data with exact stats and pinned repositories. Then the profile updates every hour and commits only when the data changes, plus once a day for the calendar.
 
+After the first install the repository needs one file to change: `profile.json`. The workflow renders every image and the README from it. **Download → Already installed?** offers **Copy profile.json**, **Download profile.json** and **Edit on GitHub**, so a later theme or text change is a single small file update in the GitHub web editor — no archive, upload or sign-in required. **Install to GitHub** uses the same shortcut: when the repository already has `profile.json`, it commits only that file and the workflow instead of re-uploading every asset.
+
 To change the profile later, edit `profile.json` in the repository or set it up again on the site and upload the new `profile.json`.
 
 The editor reads `profile.json` from the root of the profile repository, so setups made with this fork or with the upstream [expressive-profile](https://github.com/metawka/expressive-profile) open as-is: entering a username that already has that file loads their theme, colors, blocks and texts instead of starting from defaults. Re-entering the same username only refreshes the numbers, and a username without a saved setup keeps the setup currently on screen.
@@ -76,7 +78,9 @@ The editor reads `profile.json` from the root of the profile repository, so setu
 
 ### Sign-in proxy
 
-**Install to GitHub** uses the device-flow proxy in [`proxy/`](proxy). Deploy that folder as a Vercel project, then point `AUTH` in `src/app/install.ts` at the deployment URL. Without a proxy deployment, use **Download archive** and upload the ZIP contents manually. Downloading, editing and copying the generated Markdown do not require sign-in.
+**Install to GitHub** uses the device-flow proxy in [`proxy/`](proxy). The GitHub device-flow endpoints send no CORS headers, so the browser cannot call them directly: the two Vercel functions in `proxy/api` forward the requests and allow the site origins listed in `proxy/api/_github.js`.
+
+Deploy that folder as a Vercel project (free plan is enough), then point `AUTH` in `src/app/install.ts` at `https://<deployment>/api`. Until then the live site is still pointed at the upstream proxy, whose origin allowlist does not include this fork's site, so the browser blocks the sign-in request. **Download archive**, **profile.json only** and the rest of the editor work without sign-in.
 
 ## Action
 

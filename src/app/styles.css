@@ -1616,6 +1616,19 @@ a {
   gap: 10px;
 }
 
+.get-later {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.get-later .dialog-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
 .get-option {
   display: grid;
   grid-template-columns: auto 1fr;

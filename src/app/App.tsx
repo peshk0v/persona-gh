@@ -660,6 +660,26 @@ function GetDialog({ t, config, data, avatar, onLogin, onClose }: { t: Dict; con
     setPhase("zip");
   };
 
+  const [copied, setCopied] = useState(false);
+  const json = () => JSON.stringify({ ...config, login: config.login }, null, 2) + "\n";
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(json());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      prompt("profile.json", json());
+    }
+  };
+  const saveJson = () => {
+    const url = URL.createObjectURL(new Blob([json()], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "profile.json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  };
+
   const panel = (key: string, body: ReactNode) => (
     <motion.div key={key} className="get-panel" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={spring}>
       {body}
@@ -685,6 +705,17 @@ function GetDialog({ t, config, data, avatar, onLogin, onClose }: { t: Dict; con
             <span className="get-option-title">{t.optZip}</span>
             <span className="get-option-text">{t.optZipText}</span>
           </motion.button>
+        </div>
+        <div className="get-later">
+          <span className="get-option-title">{t.jsonOnly}</span>
+          <p className="note">{t.jsonOnlyText}</p>
+          <div className="dialog-actions">
+            <Button kind="tonal" icon={copied ? "check" : "content_copy"} onClick={copyJson}>{copied ? t.copiedJson : t.copyJson}</Button>
+            <Button kind="tonal" icon="download" onClick={saveJson}>{t.saveJson}</Button>
+            {config.login !== DEMO_LOGIN && (
+              <Button kind="text" icon="open_in_new" href={`https://github.com/${config.login}/${config.login}/edit/main/profile.json`}>{t.editOnGithub}</Button>
+            )}
+          </div>
         </div>
       </>
     ));

@@ -71,6 +71,11 @@ export async function existingReadme(token: string, login: string) {
   return readme.status === 200;
 }
 
+export async function existingSetup(token: string, login: string, name = login) {
+  const own = await gh(token, `/repos/${login}/${name}/contents/profile.json`);
+  return own.status === 200;
+}
+
 export async function install(token: string, login: string, files: Record<string, string>, step: (n: number) => void, name = login) {
   step(0);
   let repo = await gh(token, `/repos/${login}/${name}`);
@@ -92,8 +97,13 @@ export async function install(token: string, login: string, files: Record<string
   const head = ref.body.object.sha;
   const commit = await gh(token, `${full}/git/commits/${head}`);
   step(1);
+  // The profile workflow rebuilds every image and the README from profile.json, so an existing
+  // setup is updated by committing that one file (plus the workflow, which may have changed).
+  const update = await existingSetup(token, login, name);
   const tree: { path: string; mode: string; type: string; sha: string }[] = [];
-  const entries = Object.entries(files);
+  const entries = Object.entries(files).filter(
+    ([path]) => !update || path === "profile.json" || path === ".github/workflows/persona-gh.yml",
+  );
   for (let i = 0; i < entries.length; i += 6) {
     const chunk = await Promise.all(
       entries.slice(i, i + 6).map(async ([path, text]) => {
