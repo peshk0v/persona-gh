@@ -1,19 +1,40 @@
 # persona-gh
 
-Multi-theme GitHub profile README generator with seven visual styles, from **Material 3 Expressive** to **Retropixel**. Every theme renders the same blocks with its own surfaces, borders, radii, shadows, typography, accents and light/dark tokens.
+GitHub profile README generator with seven visual themes: **Material 3 Expressive**, minimalism, warm minimalism, glassmorphism, neumorphism, bento grid and retropixel. Build the profile on the site, install it into your profile repository once, and a GitHub Action keeps the stats up to date.
 
-> **Fork notice**
->
-> `persona-gh` is a fork of [expressive-profile](https://github.com/metawka/expressive-profile), originally created by [metawka](https://github.com/metawka). The original code, design, and documentation are © metawka and stay under the MIT License. This fork keeps the original copyright notice and adds `Copyright (c) 2026 peshk0v`. See [LICENSE](LICENSE).
+<p align="center">
+  <a href="https://peshk0v.github.io/persona-gh/"><b>Open the generator</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/peshk0v">Live example</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/peshk0v/persona-gh">Source on GitHub</a>
+</p>
 
-- Fork source: <https://github.com/peshk0v/persona-gh>
-- Issues: <https://github.com/peshk0v/persona-gh/issues>
-- Upstream project: <https://github.com/metawka/expressive-profile>
-- Original author: <https://github.com/metawka>
+<div align="center">
 
-## Status
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/hero-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/hero-light.svg" width="100%" alt="Hi, I'm peshk0v"></picture>
 
-**Phase 2: multi-theme engine.** The rebrand to `persona-gh` is complete and the renderer now runs through a theme registry. Material 3 works exactly as before; six new themes ship beside it and existing `profile.json` files stay compatible.
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-l-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-l-light.svg" width="23.714%" alt=""></picture><a href="https://t.me/pshlst"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-1-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-1-light.svg" width="18.666%" alt="telegram"></picture></a><a href="https://discord.com/users/654190262700212224"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-2-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-2-light.svg" width="17.523%" alt="discord"></picture></a><a href="https://www.reddit.com/user/Peshcovv/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-3-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-3-light.svg" width="16.380%" alt="reddit"></picture></a><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-r-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/social-r-light.svg" width="23.714%" alt=""></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/about-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/about-light.svg" width="100%" alt="About me"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/stack-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/stack-light.svg" width="100%" alt="Tech stack"></picture>
+
+<a href="https://github.com/peshk0v/Zapret-Zen"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/project-zapret-zen-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/project-zapret-zen-light.svg" width="49%" alt="Zapret-Zen"></picture></a>&nbsp;<a href="https://github.com/peshk0v/Zapret-Mods"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/project-zapret-mods-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/project-zapret-mods-light.svg" width="49%" alt="Zapret-Mods"></picture></a>
+
+<a href="https://github.com/peshk0v/persona-gh"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/project-persona-gh-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/project-persona-gh-light.svg" width="49%" alt="persona-gh"></picture></a>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/stats-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/stats-light.svg" width="100%" alt="GitHub activity"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/streak-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/streak-light.svg" width="100%" alt="Streak"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/wave-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/wave-light.svg" width="100%" alt=""></picture>
+
+<a href="https://t.me/pshlst"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/button-1-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/button-1-light.svg" width="auto" alt="My website"></picture></a>&nbsp;&nbsp;<a href="https://github.com/peshk0v?tab=repositories"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/button-2-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/button-2-light.svg" width="auto" alt="All repositories"></picture></a>
+
+<a href="https://peshk0v.github.io/persona-gh/?from=peshk0v"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/credit-dark.svg"><img src="https://raw.githubusercontent.com/peshk0v/peshk0v/main/assets/credit-light.svg" width="auto" alt="Made with persona-gh"></picture></a>
+
+</div>
 
 ## Themes
 
@@ -27,147 +48,40 @@ Multi-theme GitHub profile README generator with seven visual styles, from **Mat
 | **Bento grid** | Modular cells, crisp borders and data-widget hierarchy. |
 | **Retropixel** | Sharp pixel frames, hard shadows and console typography. |
 
-The theme selector lives in the editor's **Style** panel. Each theme keeps its identity across light and dark mode, while the accent palette is still derived from the chosen seed color.
+Every theme has its own light and dark tokens, and the accent color still comes from one seed color you pick. The selector lives in the **Style** panel, with live previews.
 
-## Features
+## How it works
 
-- Blocks: header, socials, about, tech stack, project cards, activity, streak, divider, link buttons.
-- Seven rendering themes with live previews and a theme selector.
-- Live preview with editing by click, drag to reorder, hiding blocks.
-- Material 3 color palette built from one color, a custom color or an image. Five palette styles, light and dark themes.
-- Eight Material 3 shapes for the avatar, project cards and social icons; other themes use their own geometry.
-- Typing animation for the subtitle and animations in every card. Animations can be turned off.
-- Icon search across Material Symbols and Simple Icons.
-- Templates, a shareable link to a setup and a "make one like this" page for any profile built with the generator.
-- Opening a username that already has a `profile.json` setup, from this fork or the upstream project.
-- English and Russian interface.
+1. Open the [generator](https://peshk0v.github.io/persona-gh/) and enter a GitHub username.
+2. Choose a theme, arrange the blocks, edit the texts and colors.
+3. Press **Download** and pick **Install to GitHub** or **Download archive**.
 
-## Roadmap
+Everything is rendered as sanitizer-safe SVG: `<defs>`, gradients, filters and patterns only, no scripts and no external references.
 
-- Phase 1: rename the project, update repository and author metadata, preserve the original MIT notice.
-- Phase 2: introduce a theme registry and theme tokens, then add new profile design styles beside Material 3 Expressive.
-- Later: theme-aware templates, per-theme typography packaging, and a public gallery of community setups.
+Entering a username that already has a `profile.json` (from this fork or the original project) opens that saved setup instead of the defaults. A username without one keeps the current setup and only changes the login.
 
-## Usage
+## Updating the profile
 
-1. Run the generator locally with `npm run dev`.
-2. Enter a GitHub username and set up the blocks.
-3. Press **Download** and choose **Install to GitHub** or **Download archive**.
+After the first install only `profile.json` has to change: the workflow renders all images and the README from it. **Download → Already installed?** gives you **Copy profile.json**, **Download profile.json** and **Edit on GitHub**, so a later change is one small file in the GitHub web editor. **Install to GitHub** does the same: when the repository already has `profile.json`, it commits only that file and the workflow.
 
-The site is configured for GitHub Pages at `/persona-gh/`. Once deployed, the generator URL will be <https://peshk0v.github.io/persona-gh/>.
-
-Manual setup: **Download archive** gives a ZIP for a public repository named exactly like the username. All files from it are uploaded to that repository, including the `.github` and `.profile` folders.
-
-Signing in uses the GitHub device flow with the `public_repo` and `workflow` scopes. The token stays in the browser tab and is used only for this upload. If the repository already has a README, the generator asks before replacing it.
-
-The first workflow run replaces the preview data with exact stats and pinned repositories. Then the profile updates every hour and commits only when the data changes, plus once a day for the calendar.
-
-After the first install the repository needs one file to change: `profile.json`. The workflow renders every image and the README from it. **Download → Already installed?** offers **Copy profile.json**, **Download profile.json** and **Edit on GitHub**, so a later theme or text change is a single small file update in the GitHub web editor — no archive, upload or sign-in required. **Install to GitHub** uses the same shortcut: when the repository already has `profile.json`, it commits only that file and the workflow instead of re-uploading every asset.
-
-To change the profile later, edit `profile.json` in the repository or set it up again on the site and upload the new `profile.json`.
-
-The editor reads `profile.json` from the root of the profile repository, so setups made with this fork or with the upstream [expressive-profile](https://github.com/metawka/expressive-profile) open as-is: entering a username that already has that file loads their theme, colors, blocks and texts instead of starting from defaults. Re-entering the same username only refreshes the numbers, and a username without a saved setup keeps the setup currently on screen.
-
-## Deploying the site
-
-1. Create or rename the GitHub repository to **`persona-gh`**. The production Vite base path is `/persona-gh/`, so a different repository name breaks asset URLs unless `vite.config.ts` is changed to match.
-2. Push the project to the `main` branch.
-3. Open **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
-4. The bundled `Pages` workflow runs `npm ci` and `npm run build`, then publishes `dist` to <https://peshk0v.github.io/persona-gh/>.
-5. Run `npm run renderer` after changing renderer code and commit `action/render.mjs`. The generated profile workflow uses `peshk0v/persona-gh@main`, which runs that bundle.
-
-### Sign-in proxy
-
-**Install to GitHub** uses the device-flow proxy in [`proxy/`](proxy). The GitHub device-flow endpoints send no CORS headers, so the browser cannot call them directly: the two Vercel functions in `proxy/api` forward the requests and allow the site origins listed in `proxy/api/_github.js`.
-
-Deploy that folder as a Vercel project (free plan is enough), then point `AUTH` in `src/app/install.ts` at `https://<deployment>/api`. Until then the live site is still pointed at the upstream proxy, whose origin allowlist does not include this fork's site, so the browser blocks the sign-in request. **Download archive**, **profile.json only** and the rest of the editor work without sign-in.
-
-## Action
-
-The archive contains this workflow:
-
-```yaml
-name: persona-gh
-
-on:
-  schedule:
-    - cron: "17 * * * *"
-  workflow_dispatch:
-  push:
-    paths:
-      - profile.json
-      - .profile/icons.json
-      - .github/workflows/persona-gh.yml
-
-permissions:
-  contents: write
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: peshk0v/persona-gh@main
-        with:
-          token: ${{ secrets.PROFILE_TOKEN || github.token }}
-```
-
-| Input | Default | Description |
-| --- | --- | --- |
-| `token` | `github.token` | Token for the GitHub API |
-| `commit-message` | `Updated profile` | Message of update commits |
-
-With the default token the language chart counts public repositories only. Private repositories are counted with a personal access token saved as the `PROFILE_TOKEN` secret.
-
-> **Action dependency note:** the generated workflow uses this fork's Action (`peshk0v/persona-gh@main`), so all seven themes render on GitHub. Pin it to a release tag such as `@v1` after publishing one. The upstream project is still credited in the license and project links.
-
-## Theme engine
-
-The renderer is theme-driven, with Material 3 as the default:
-
-- `src/render/types.ts` defines `Config`, including `theme: ThemeId`, `seed`, `scheme`, `motion`, `iconFill`, and block settings. Configs without `theme` migrate to `material-3`, so existing `profile.json` files keep working.
-- `src/render/themes/` is the registry. `index.ts` exposes `THEMES`, `THEME_IDS` and `getTheme()`. Each theme file defines its palette, card/project/inner/tile/row/chip surfaces, corner radii, line weights, badge and icon shapes, heading typography, and optional SVG `<defs>`, hero art and backdrop.
-- `src/render/palette.ts` turns the seed color into Material role tokens for the Material theme. Other themes derive their own accents from the same seed while keeping their surface character.
-- `src/render/kit.ts` provides SVG primitives: text measuring/wrapping, parametric shapes, square/rounded frames, themed surfaces, icons, chips, animation CSS, and the SVG document wrapper.
-- `src/render/blocks.ts` renders each block as a standalone SVG using the active theme, palette, shapes, and icons.
-- `src/render/index.ts` resolves the theme, loops over light/dark modes, renders every block, and builds the Markdown `README.md` from the generated assets.
-- `src/app/editors.tsx` contains the theme selector plus seed color and palette scheme controls; `src/app/presets.ts` controls block composition.
-- `src/app/App.tsx` applies the active theme palette to CSS variables for the editor UI and previews the generated SVGs.
-
-All generated SVG stays inside GitHub's README sanitizer: inline `<defs>`, `<filter>`, `<linearGradient>`, `<radialGradient>` and `<pattern>` only, no scripts and no external references.
+Pinned repositories and exact stats appear after the first workflow run; after that the profile refreshes hourly and commits only when something changed. With the default token the language chart counts public repositories only; add a personal access token as the `PROFILE_TOKEN` secret to include private ones.
 
 ## Development
 
-Requirements: Node.js 20 or newer.
+Requires Node.js 20 or newer.
 
 ```bash
 npm install
-npm run dev
+npm run dev     # site with live preview
+npm run build   # site into dist + Action renderer
 ```
 
-`npm run build` builds the site into `dist` and the Action renderer into `action/render.mjs`.
+The site is built for GitHub Pages at `/persona-gh/`. The bundled `Pages` workflow publishes `dist`; set **Settings → Pages → Source** to **GitHub Actions**. Run `npm run renderer` after touching renderer code and commit `action/render.mjs`.
 
-The `proxy` folder contains the sign-in proxy deployed on Vercel. It forwards two device flow requests to GitHub and stores nothing.
-
-## Privacy
-
-This fork does not include the upstream GoatCounter analytics snippet. The original project counted visits on `metawka.github.io` only; the fork ships without analytics.
-
-The sign-in flow still uses the upstream device-flow proxy endpoint (`expressive-profile-auth.vercel.app`) during Phase 1. A fork-owned proxy will be needed for a production deployment; the proxy source is included in [`proxy/`](proxy).
-
-## License
-
-The code is under the [MIT License](LICENSE).
-
-Original work © 2026 metawka. Fork changes © 2026 peshk0v.
-
-Third-party assets:
-
-- Google Sans Flex and Roboto Flex: SIL Open Font License, see `fonts/`.
-- Material Symbols: Apache License 2.0.
-- Simple Icons: CC0 1.0. Brand icons belong to their owners.
+**Install to GitHub** uses the two device-flow functions in [`proxy/`](proxy). GitHub does not send CORS headers on its OAuth endpoints, so the browser needs that small proxy: deploy the folder as a Vercel project and point `AUTH` in `src/app/install.ts` at it. Without it, use the archive or the `profile.json` update path.
 
 ## Credits
 
-- Original project: [expressive-profile](https://github.com/metawka/expressive-profile) by [metawka](https://github.com/metawka).
-- Fork maintained by [peshk0v](https://github.com/peshk0v).
+`persona-gh` is a fork of [expressive-profile](https://github.com/metawka/expressive-profile) by [metawka](https://github.com/metawka). The original code, design and documentation stay under the MIT License; this fork keeps the original copyright notice and adds `Copyright (c) 2026 peshk0v`. See [LICENSE](LICENSE).
+
+Third-party assets: Google Sans Flex and Roboto Flex (SIL Open Font License, see `fonts/`), Material Symbols (Apache 2.0), Simple Icons (CC0 1.0). Brand icons belong to their owners.
