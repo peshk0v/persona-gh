@@ -39,6 +39,7 @@ The theme selector lives in the editor's **Style** panel. Each theme keeps its i
 - Typing animation for the subtitle and animations in every card. Animations can be turned off.
 - Icon search across Material Symbols and Simple Icons.
 - Templates, a shareable link to a setup and a "make one like this" page for any profile built with the generator.
+- Opening a username that already has a `profile.json` setup, from this fork or the upstream project.
 - English and Russian interface.
 
 ## Roadmap
@@ -62,6 +63,8 @@ Signing in uses the GitHub device flow with the `public_repo` and `workflow` sco
 The first workflow run replaces the preview data with exact stats and pinned repositories. Then the profile updates every hour and commits only when the data changes, plus once a day for the calendar.
 
 To change the profile later, edit `profile.json` in the repository or set it up again on the site and upload the new `profile.json`.
+
+The editor reads `profile.json` from the root of the profile repository, so setups made with this fork or with the upstream [expressive-profile](https://github.com/metawka/expressive-profile) open as-is: entering a username that already has that file loads their theme, colors, blocks and texts instead of starting from defaults. Re-entering the same username only refreshes the numbers, and a username without a saved setup keeps the setup currently on screen.
 
 ## Deploying the site
 

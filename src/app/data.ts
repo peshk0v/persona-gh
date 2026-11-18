@@ -126,13 +126,14 @@ function daysFromEvents(events: any[]) {
   return { days: out, total, streak: streakOf(series) };
 }
 
-type Loaded = { data: Data; avatar: string | null; stale?: boolean; exact?: boolean };
+export type Loaded = { data: Data; avatar: string | null; config: Config | null; stale?: boolean; exact?: boolean };
 const cache = new Map<string, Promise<Loaded>>();
 const FRESH = 30 * 60 * 1000;
+const CACHE_KEY = "ep:gh:2:";
 
 function saved(key: string): { t: number; v: Loaded } | null {
   try {
-    const raw = localStorage.getItem(`ep:gh:${key}`);
+    const raw = localStorage.getItem(`${CACHE_KEY}${key}`);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -143,9 +144,9 @@ function save(key: string, v: Loaded) {
   try {
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
-      if (k?.startsWith("ep:gh:") && k !== `ep:gh:${key}`) localStorage.removeItem(k);
+      if (k?.startsWith("ep:gh:") && k !== `${CACHE_KEY}${key}`) localStorage.removeItem(k);
     }
-    localStorage.setItem(`ep:gh:${key}`, JSON.stringify({ t: Date.now(), v }));
+    localStorage.setItem(`${CACHE_KEY}${key}`, JSON.stringify({ t: Date.now(), v }));
   } catch {}
 }
 
@@ -172,9 +173,10 @@ export function loadProfile(login: string, force = false): Promise<Loaded> {
 
 async function fetchProfile(login: string) {
   const user = await api(`users/${encodeURIComponent(login)}`);
-  const [repos, events] = await Promise.all([
+  const [repos, events, config] = await Promise.all([
     api(`users/${encodeURIComponent(login)}/repos?per_page=100&type=owner&sort=pushed`),
     api(`users/${encodeURIComponent(login)}/events/public?per_page=100`).catch(() => []),
+    loadConfig(login),
   ]);
   const all: Repo[] = repos.map((r: any) => ({
     name: r.name,
@@ -210,7 +212,21 @@ async function fetchProfile(login: string) {
     data.stars = saved.stars ?? data.stars;
     data.streak = saved.streak ?? data.streak;
   }
-  return { data, avatar, name: user.name as string | null, exact: !!saved };
+  return { data, avatar, config, name: user.name as string | null, exact: !!saved };
+}
+
+/** The editable setup lives at the root of the profile repository, both in this fork
+ *  and in the upstream expressive-profile. Without it the editor starts from defaults. */
+async function loadConfig(login: string): Promise<Config | null> {
+  try {
+    const name = encodeURIComponent(login);
+    const r = await fetch(`https://raw.githubusercontent.com/${name}/${name}/HEAD/profile.json`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && typeof j === "object" && j.version === 1 ? (j as Config) : null;
+  } catch {
+    return null;
+  }
 }
 
 async function actionData(login: string): Promise<Partial<Data> | null> {

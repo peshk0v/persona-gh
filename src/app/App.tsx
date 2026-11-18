@@ -4,7 +4,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, ty
 import { projectList } from "../render/blocks";
 import { deflateSync, inflateSync, strFromU8, strToU8 } from "fflate";
 import { BLOCKS, defaults, getTheme, render, REPO_URL, slug, usedIcons, type BlockId, type Config, type Data, type Lang, type ShapeName } from "../render";
-import { buildZip, DEMO, hasIcon, LoadError, loadAllIcons, loadProfile, profileFiles, store } from "./data";
+import { buildZip, DEMO, hasIcon, LoadError, loadAllIcons, loadProfile, profileFiles, store, type Loaded } from "./data";
 import { existingReadme, install, InstallError, requestCode, waitForToken, whoami, type DeviceCode } from "./install";
 import { SheetBody, type SheetId } from "./editors";
 import { DICTS, type Dict } from "./i18n";
@@ -221,7 +221,16 @@ export default function App() {
         setExact(!!r.exact);
         setAvatar(r.avatar);
         setInput(name);
-        setConfig((c) => ({ ...c, login: name }));
+        // A username with a saved setup opens that setup in the editor. Re-entering
+        // the same username only refreshes the numbers so local edits survive.
+        const theirs = r.config ? migrate(r.config, lang) : null;
+        const switched = name.toLowerCase() !== config.login.toLowerCase();
+        if (theirs && switched) {
+          setConfig({ ...theirs, login: name });
+          setToast(t.loaded.replace("{login}", name));
+        } else {
+          setConfig((c) => ({ ...c, login: name }));
+        }
       } catch (e) {
         if (e instanceof LoadError && e.message === "limit" && e.reset) {
           setToast(t.limitAt.replace("{time}", e.reset.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })));
@@ -230,7 +239,7 @@ export default function App() {
         setLoading(false);
       }
     },
-    [t],
+    [t, lang, config.login],
   );
 
   useEffect(() => {
@@ -788,14 +797,13 @@ function ZipSteps({ t, login, onAgain }: { t: Dict; login: string; onAgain: () =
 function Landing({ login, t, dark, lang, onRemix, onScratch }: { login: string; t: Dict; dark: boolean; lang: Lang; onRemix: (c: Config) => void; onScratch: () => void }) {
   const [theirs, setTheirs] = useState<Config | null>(null);
   const [missing, setMissing] = useState(false);
-  const [view, setView] = useState<{ data: Data; avatar: string | null } | null>(null);
+  const [view, setView] = useState<Loaded | null>(null);
   useEffect(() => {
-    const name = encodeURIComponent(login);
-    fetch(`https://raw.githubusercontent.com/${name}/${name}/HEAD/profile.json`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((c: Config) => setTheirs(migrate(c, lang)))
-      .catch(() => setMissing(true));
-    loadProfile(login).then(setView).catch(() => {});
+    loadProfile(login).then((v) => {
+      setView(v);
+      if (v.config) setTheirs(migrate(v.config, lang));
+      else setMissing(true);
+    }, () => setMissing(true));
   }, [login]);
   const hero = useMemo(() => {
     if (!theirs) return null;
