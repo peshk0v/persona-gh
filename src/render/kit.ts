@@ -10,32 +10,62 @@ export function esc(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
 
+// Glyphs missing from the width table: CJK and emoji render as full-width boxes,
+// not as narrow latin fallbacks, so measuring them at 0.55em clips text.
+function glyphWidth(ch: string, table: Record<string, number>) {
+  const known = table[ch];
+  if (known !== undefined) return known;
+  const c = ch.codePointAt(0) ?? 0;
+  if (c >= 0x2e80 || (c >= 0x1f000 && c <= 0x1faff) || (c >= 0x2600 && c <= 0x27bf)) return 1;
+  return 0.55;
+}
+
 export function textWidth(s: string, size: number, weight = 400, scale = 1, mono = false) {
   if (mono) return [...s].length * 0.6 * size * scale;
   const key = [400, 500, 600, 700].reduce((a, b) => (Math.abs(b - weight) < Math.abs(a - weight) ? b : a));
   const table = METRICS[String(key)];
   let w = 0;
-  for (const c of s) w += table[c] ?? 0.55;
+  for (const ch of s) w += glyphWidth(ch, table);
   return w * size * scale;
 }
 
 export function wrap(s: string, size: number, width: number, weight = 400, lines = 2, scale = 1, mono = false) {
+  const fits = (t: string) => textWidth(t, size, weight, scale, mono) <= width;
   const out: string[] = [];
   let cur = "";
   for (const word of s.split(/\s+/).filter(Boolean)) {
-    const trial = cur ? `${cur} ${word}` : word;
-    if (textWidth(trial, size, weight, scale, mono) <= width || !cur) cur = trial;
-    else {
+    if (cur && !fits(`${cur} ${word}`)) {
       out.push(cur);
       cur = word;
+    } else if (!cur) {
+      cur = word;
+    } else {
+      cur = `${cur} ${word}`;
+    }
+    if (cur && !fits(cur)) {
+      // a single token wider than the box (url, hash, mixed script) has to be hard-broken
+      const parts: string[] = [];
+      let piece = "";
+      for (const ch of cur) {
+        if (piece && !fits(piece + ch)) {
+          parts.push(piece);
+          piece = ch;
+        } else piece += ch;
+      }
+      if (piece) parts.push(piece);
+      out.push(...parts.slice(0, -1));
+      cur = parts[parts.length - 1] ?? "";
     }
   }
   out.push(cur);
   if (out.length > lines) {
     out.length = lines;
     let last = out[lines - 1];
-    while (textWidth(last + "…", size, weight, scale, mono) > width && last.includes(" ")) last = last.slice(0, last.lastIndexOf(" "));
-    out[lines - 1] = last + "…";
+    while (last.length > 1 && !fits(`${last}…`)) {
+      const cut = last.lastIndexOf(" ");
+      last = cut > 0 ? last.slice(0, cut) : last.slice(0, -1);
+    }
+    out[lines - 1] = `${last.trimEnd()}…`;
   }
   return out;
 }
@@ -131,6 +161,9 @@ export function framePath(kind: ShapeName | "square" | undefined, cx: number, cy
 }
 
 // Surface primitive. Emits an optional hard shadow, the main shape and inner frames.
+// Shadows that fall outside the viewBox are clipped by the renderer: blocks that fill
+// the whole canvas therefore read as flat frames, which is intended (there is no room
+// to show a shadow), while padded surfaces get a real offset shadow.
 export function surface(spec: SurfaceSpec, x: number, y: number, w: number, h: number, extra = "") {
   const attrs = (sx: number, sy: number) => {
     let a = `x="${+sx.toFixed(2)}" y="${+sy.toFixed(2)}" width="${+w.toFixed(2)}" height="${+h.toFixed(2)}" rx="${spec.rx}"`;
@@ -139,17 +172,9 @@ export function surface(spec: SurfaceSpec, x: number, y: number, w: number, h: n
     if (spec.opacity !== undefined) a += ` opacity="${spec.opacity}"`;
     return a;
   };
-  const bleed = !!spec.shadow && x === 0 && y === 0;
   let out = "";
-  if (spec.shadow && !bleed) {
-    out += `<rect ${attrs(x + spec.shadow.dx, y + spec.shadow.dy)} fill="${spec.shadow.color}"/>`;
-  }
+  if (spec.shadow) out += `<rect ${attrs(x + spec.shadow.dx, y + spec.shadow.dy)} fill="${spec.shadow.color}"/>`;
   out += `<rect ${attrs(x, y)} fill="${spec.fill}"${extra}/>`;
-  if (spec.shadow && bleed) {
-    const d = Math.max(spec.shadow.dx, spec.shadow.dy);
-    out += `<rect x="${x}" y="${+(y + h - d).toFixed(2)}" width="${+w.toFixed(2)}" height="${d}" fill="${spec.shadow.color}"/>`;
-    out += `<rect x="${+(x + w - d).toFixed(2)}" y="${y}" width="${d}" height="${+h.toFixed(2)}" fill="${spec.shadow.color}"/>`;
-  }
   for (const b of spec.innerBorders ?? []) {
     const rx = Math.max(0, spec.rx - b.inset);
     out +=
@@ -225,7 +250,9 @@ export interface SvgOptions {
   th?: Theme;
   dark?: boolean;
   p?: Palette;
-  /** Draw the theme backdrop. Disable for standalone cards that need transparent margins. */
+  /** Draw the theme backdrop (glow, pattern). Only full-width blocks and standalone
+   *  cards have room for it; small pieces must stay transparent or they show up as
+   *  separate plates in a README. */
   backdrop?: boolean;
 }
 
@@ -248,7 +275,7 @@ export function svg(w: number, h: number, body: string, title: string, motion = 
     (opts.extra ?? "") +
     (motion ? "" : "*{animation:none!important}");
   const defs = th?.defs && opts.p ? th.defs(opts.p, !!opts.dark) : "";
-  const backdrop = th?.backdrop && opts.p && opts.backdrop !== false ? th.backdrop(opts.p, !!opts.dark, w, h) : "";
+  const backdrop = th?.backdrop && opts.p && opts.backdrop === true ? th.backdrop(opts.p, !!opts.dark, w, h) : "";
   const content = (defs ? `<defs>${defs}</defs>` : "") + backdrop + body;
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +

@@ -7,6 +7,7 @@ export const warmMinimalism: Theme = {
   fontFamily: "Georgia,'Times New Roman',serif",
   embedFont: false,
   textScale: 1.03,
+  boldScale: 1.13,
   heading: { weight: 600, spacing: 0 },
   radius: {
     card: 12, project: 12, inner: 10, tile: 12, streak: 12, cell: 8,

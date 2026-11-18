@@ -61,9 +61,12 @@ export interface Theme {
   embedFont?: boolean;
   /** Multiplier for glyph-width estimates when the theme font is wider than Google Sans. */
   textScale?: number;
+  /** Extra multiplier used for weights >= 600 (bold system fonts are much wider). */
+  boldScale?: number;
   /** Measure text with a fixed 0.6em monospace advance instead of the proportional table. */
   mono?: boolean;
-  /** Transparent padding around project cards so soft SVG filters are not clipped. */
+  /** Transparent margin around project cards reserved for a hard offset shadow.
+   *  The card body keeps its 412x232 grid, so this only shifts its right/bottom edge. */
   cardPad?: number;
   heading: { weight: number; spacing: number; uppercase?: boolean };
   radius: ThemeRadius;

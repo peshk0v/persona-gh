@@ -5,6 +5,8 @@ export const neumorphism: Theme = {
   id: "neumorphism",
   fontFamily: "'Nunito','Segoe UI',sans-serif",
   embedFont: false,
+  textScale: 1.04,
+  boldScale: 1.06,
   heading: { weight: 700, spacing: 0 },
   radius: {
     card: 28, project: 24, inner: 20, tile: 20, streak: 22, cell: 12,
@@ -16,7 +18,7 @@ export const neumorphism: Theme = {
   iconShape: "square",
   avatarShape: "square",
   socialShape: "square",
-  cardPad: 20,
+  cardPad: 0,
   avatar: (p) => ({
     frame: { fill: p.surfaceContainer, filter: "url(#neuRaised)" },
     inner: p.surfaceContainerHigh,
@@ -37,12 +39,12 @@ export const neumorphism: Theme = {
       ...a,
     });
   },
-  card: (p) => ({ fill: p.surfaceContainer, rx: 28, filter: "url(#neuRaised)" }),
-  project: (p) => ({ fill: p.surfaceContainerHigh, rx: 24, filter: "url(#neuRaised)" }),
+  card: (p) => ({ fill: p.surfaceContainer, rx: 28 }),
+  project: (p) => ({ fill: p.surfaceContainerHigh, rx: 24, filter: "url(#neuInset)" }),
   inner: (p) => ({ fill: p.surfaceContainer, rx: 20, filter: "url(#neuInset)" }),
   tile: (p) => ({ fill: p.surfaceContainerHigh, rx: 20, filter: "url(#neuRaised)" }),
   subtle: (p) => ({ fill: p.surfaceContainerHighest, rx: 16, filter: "url(#neuInset)" }),
-  row: (p) => ({ fill: p.surfaceContainerLow, rx: 28, filter: "url(#neuRaised)" }),
+  row: (p) => ({ fill: p.surfaceContainerLow, rx: 28 }),
   rowFill: (p) => p.surfaceContainerLow,
   chip: (p, _dark, variant) => {
     if (variant === "filled") return { fill: p.primary, fg: p.onPrimary, rx: 16, filter: "url(#neuRaised)" };
@@ -56,11 +58,11 @@ export const neumorphism: Theme = {
     const lightOpacity = dark ? 0.72 : 0.9;
     const shadowOpacity = dark ? 0.62 : 0.42;
     return (
-      `<filter id="neuRaised" x="-30%" y="-30%" width="160%" height="160%">` +
+      `<filter id="neuRaised" x="-60%" y="-60%" width="220%" height="220%">` +
       `<feDropShadow dx="-5" dy="-5" stdDeviation="5" flood-color="${light}" flood-opacity="${lightOpacity}"/>` +
       `<feDropShadow dx="6" dy="6" stdDeviation="6" flood-color="${shadow}" flood-opacity="${shadowOpacity}"/>` +
       `</filter>` +
-      `<filter id="neuInset" x="-20%" y="-20%" width="140%" height="140%">` +
+      `<filter id="neuInset" x="-60%" y="-60%" width="220%" height="220%">` +
       `<feOffset dx="4" dy="4" in="SourceAlpha" result="o1"/>` +
       `<feGaussianBlur stdDeviation="5" in="o1" result="b1"/>` +
       `<feComposite operator="out" in="SourceAlpha" in2="b1" result="innerDark"/>` +

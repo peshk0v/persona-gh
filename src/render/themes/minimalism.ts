@@ -5,6 +5,8 @@ export const minimalism: Theme = {
   id: "minimalism",
   fontFamily: "'Inter','Helvetica Neue',Arial,sans-serif",
   embedFont: false,
+  textScale: 1.03,
+  boldScale: 1.05,
   heading: { weight: 700, spacing: 0 },
   radius: {
     card: 6, project: 6, inner: 5, tile: 5, streak: 6, cell: 4,

@@ -17,6 +17,7 @@ export const retropixel: Theme = {
   iconShape: "square",
   avatarShape: "square",
   socialShape: "square",
+  cardPad: 6,
   avatar: (p) => ({
     halo: { fill: p.primary },
     frame: { fill: p.primaryContainer, stroke: p.onSurface, strokeWidth: 3 },
@@ -44,7 +45,6 @@ export const retropixel: Theme = {
     rx: 0,
     stroke: p.onSurface,
     strokeWidth: 3,
-    shadow: { dx: 6, dy: 6, color: p.onSurface },
     innerBorders: [{ inset: 5, stroke: p.onSurface, width: 1 }],
   }),
   project: (p) => ({
@@ -69,7 +69,6 @@ export const retropixel: Theme = {
     rx: 0,
     stroke: p.onSurface,
     strokeWidth: 3,
-    shadow: { dx: 6, dy: 6, color: p.onSurface },
   }),
   rowFill: (p) => p.surfaceContainerLow,
   chip: (p, _dark, variant) => {

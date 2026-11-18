@@ -5,6 +5,8 @@ export const bentoGrid: Theme = {
   id: "bento-grid",
   fontFamily: "'Inter','Segoe UI',sans-serif",
   embedFont: false,
+  textScale: 1.03,
+  boldScale: 1.05,
   heading: { weight: 700, spacing: 0 },
   radius: {
     card: 20, project: 18, inner: 14, tile: 14, streak: 16, cell: 8,

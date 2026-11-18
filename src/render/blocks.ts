@@ -50,13 +50,22 @@ interface Ctx {
   dark: boolean;
 }
 
+/** Width multiplier for a rendered weight. Non-material themes are drawn with system
+ *  fonts that are wider than the measurement table, bold ones especially. */
+function ms(th: Theme, weight = 400) {
+  return (th.textScale ?? 1) * (weight >= 600 ? (th.boldScale ?? 1) : 1);
+}
+
 function sectionTitle(x: number, y: number, label: string, ic: string, { p, i, th }: Ctx, delay = 0) {
   const tile = `<path class="pop" style="animation-delay:${delay.toFixed(2)}s" d="${framePath(th.iconShape ?? "cookie", x + 20, y + 20, 20, th.radius.icon)}" fill="${p.primaryContainer}"/>`;
   const glyph = pop(icon(i, ic, x + 9, y + 9, 22, p.onPrimaryContainer), delay + 0.05);
   const size = th.heading.uppercase ? 21 : 24;
   const labelText = th.heading.uppercase ? label.toUpperCase() : label;
-  const spacing = th.heading.spacing ? ` letter-spacing="${th.heading.spacing}"` : "";
-  return tile + glyph + txt(x + 54, y + 28, fit(labelText, size, W - x - 82, th.heading.weight, th.textScale ?? 1, th.mono), size, p.onSurface, { weight: th.heading.weight, cls: "up", delay, extra: spacing });
+  const spacing = th.heading.spacing || 0;
+  const spacingAttr = spacing ? ` letter-spacing="${spacing}"` : "";
+  // letter-spacing is not part of the glyph table, so subtract it from the fit budget
+  const budget = W - x - 82 - labelText.length * spacing;
+  return tile + glyph + txt(x + 54, y + 28, fit(labelText, size, budget, th.heading.weight, ms(th, th.heading.weight), th.mono), size, p.onSurface, { weight: th.heading.weight, cls: "up", delay, extra: spacingAttr });
 }
 
 // Hero
@@ -97,10 +106,10 @@ export function hero(ctx: Ctx, avatar: string | null) {
   }
   const x = 294;
   const name = c.hero.name || c.login;
-  const room = W - x - 40;
+  const room = W - x - 24;
   const scale = th.textScale ?? 1;
-  const size = Math.min(68, room / Math.max(1, textWidth(name, 1, 700, scale, th.mono)));
-  b.push(txt(x, 92, c.hero.greeting, 22, p.onSurfaceVariant, { weight: 500, cls: "up", delay: 0.1 }));
+  const size = Math.min(68, room / Math.max(1, textWidth(name, 1, 700, ms(th, 700), th.mono)));
+  b.push(txt(x, 92, fit(c.hero.greeting, 22, W - x - 24, 500, ms(th, 500), th.mono), 22, p.onSurfaceVariant, { weight: 500, cls: "up", delay: 0.1 }));
   b.push(
     th.embedFont
       ? pop(txt(x - 3, 156, name, size, p.onSurface, { cls: "wght" }), 0.2, "up")
@@ -117,12 +126,16 @@ export function hero(ctx: Ctx, avatar: string | null) {
   });
   let cx2 = x;
   c.hero.chips.forEach((item, n) => {
-    const [g, w] = chip(i, p, cx2, 236, item.label, { icon: item.icon, delay: 0.6 + n * 0.1, style: "tonal", th, dark, scale, mono: th.mono });
+    // keep every chip: trim the label to the space that is left instead of dropping it
+    const avail = W - 24 - cx2;
+    if (avail < 70) return;
+    const label = fit(item.label, 15, avail - 28 - (item.icon ? 26 : 0), 500, scale, th.mono);
+    const [g, w] = chip(i, p, cx2, 236, label, { icon: item.icon, delay: 0.6 + n * 0.1, style: "tonal", th, dark, scale, mono: th.mono });
     if (cx2 + w > W - 24) return;
     b.push(g);
     cx2 += w + 8;
   });
-  return svg(W, h, b.join(""), `${c.hero.greeting} ${name}`, c.motion, { extra, th, dark, p });
+  return svg(W, h, b.join(""), `${c.hero.greeting} ${name}`, c.motion, { extra, th, dark, p, backdrop: true });
 }
 
 function typing(lines: string[], x: number, p: Palette, scale = 1, mono = false): [string, string] {
@@ -180,10 +193,10 @@ export function about(ctx: Ctx) {
     if (th.badge === "circle") b.push(`<circle cx="54" cy="${mid}" r="15" fill="${p.secondaryContainer}"/>`);
     else b.push(`<path d="${framePath("square", 54, mid, 15, th.radius.cell)}" fill="${p.secondaryContainer}"/>`);
     b.push(icon(i, item.icon, 45, mid - 9, 18, p.onSecondaryContainer));
-    b.push(txt(82, mid + 6, fit(item.label, 17, W - 130, 500, th.textScale ?? 1, th.mono), 17, p.onSurface, { weight: 500 }));
+    b.push(txt(82, mid + 6, fit(item.label, 17, W - 130, 500, ms(th, 500), th.mono), 17, p.onSurface, { weight: 500 }));
     b.push("</g>");
   });
-  return svg(W, h, b.join(""), c.about.title, c.motion, { th, dark, p });
+  return svg(W, h, b.join(""), c.about.title, c.motion, { th, dark, p, backdrop: true });
 }
 
 // Stack
@@ -195,7 +208,7 @@ export function stack(ctx: Ctx) {
   for (const group of c.stack.groups) {
     if (group.title) {
       const gt = group.title.toUpperCase();
-      const label = fit(gt, 12, W - 56 - gt.length * 1.4, 600, th.textScale ?? 1, th.mono);
+      const label = fit(gt, 12, W - 56 - gt.length * 1.4, 600, ms(th, 600), th.mono);
       groups.push(txt(28, y + 14, label, 12, p.onSurfaceVariant, { weight: 600, cls: "fade", delay: d, extra: ' letter-spacing="1.4"' }));
     }
     let x = 28;
@@ -206,7 +219,8 @@ export function stack(ctx: Ctx) {
         x = 28;
         cy += 44;
       }
-      groups.push(chip(i, p, x, cy, item.label, { icon: item.icon, delay: d, th, dark, scale: th.textScale ?? 1, mono: th.mono })[0]);
+      const label = fit(item.label, 15, W - 28 - x - 54, 500, th.textScale ?? 1, th.mono);
+      groups.push(chip(i, p, x, cy, label, { icon: item.icon, delay: d, th, dark, scale: th.textScale ?? 1, mono: th.mono })[0]);
       x += w + 8;
       d += 0.05;
     }
@@ -216,7 +230,7 @@ export function stack(ctx: Ctx) {
   const b = [surface(th.row(p, dark), 0, 0, W, h)];
   b.push(sectionTitle(28, 26, c.stack.title, "code", ctx));
   b.push(...groups);
-  return svg(W, h, b.join(""), c.stack.title, c.motion, { th, dark, p });
+  return svg(W, h, b.join(""), c.stack.title, c.motion, { th, dark, p, backdrop: true });
 }
 
 // Projects
@@ -255,22 +269,27 @@ export function card(ctx: Ctx, repo: Repo, index: number) {
   const { c, p, i, th, dark } = ctx;
   const w = 412;
   const h = 232;
+  // cardPad is a transparent margin reserved for a hard offset shadow; the card keeps
+  // its 412x232 content grid so every theme lines up in the two-column README table.
+  const pad = th.cardPad ?? 0;
+  const cw = w - pad;
+  const ch = h - pad;
   const d0 = 0.08 * index;
   const v = projectView(c, repo, index);
-  const b = [surface(th.project(p, dark), 0, 0, w, h)];
+  const b: string[] = [];
+  b.push(surface(th.project(p, dark), 0, 0, cw, ch));
   b.push(pop(`<path class="spin" d="${framePath(th.iconShape ?? v.shape, 52, 52, 30, th.radius.tile)}" fill="${p.primaryContainer}"/>`, d0));
   b.push(pop(icon(i, v.icon, 39, 39, 26, p.onPrimaryContainer), d0 + 0.08));
-  if (th.badge === "circle") b.push(`<circle cx="${w - 40}" cy="40" r="18" fill="${p.surfaceContainerHighest}"/>`);
-  else b.push(`<path d="${framePath("square", w - 40, 40, 18, th.radius.cell)}" fill="${p.surfaceContainerHighest}"/>`);
-  b.push(icon(i, "arrow_outward", w - 50, 30, 20, p.onSurfaceVariant));
+  if (th.badge === "circle") b.push(`<circle cx="${cw - 40}" cy="40" r="18" fill="${p.surfaceContainerHighest}"/>`);
+  else b.push(`<path d="${framePath("square", cw - 40, 40, 18, th.radius.cell)}" fill="${p.surfaceContainerHighest}"/>`);
+  b.push(icon(i, "arrow_outward", cw - 50, 30, 20, p.onSurfaceVariant));
   const tx = 24;
-  const scale = th.textScale ?? 1;
-  const forkW = repo.fork ? textWidth(c.projects.fork, 12, 600, scale, th.mono) + 28 : 0;
-  const title = fit(v.title, 23, w - 48 - forkW, 650, scale, th.mono);
+  const forkW = repo.fork ? textWidth(c.projects.fork, 12, 600, ms(th, 600), th.mono) + 28 : 0;
+  const title = fit(v.title, 23, cw - 48 - forkW, 650, ms(th, 650), th.mono);
   b.push(txt(tx, 116, title, 23, p.onSurface, { weight: 650, cls: "up", delay: d0 + 0.1 }));
   if (repo.fork) {
-    const fw = textWidth(c.projects.fork, 12, 600, scale, th.mono) + 18;
-    const fx = tx + textWidth(title, 23, 650, scale, th.mono) + 10;
+    const fw = textWidth(c.projects.fork, 12, 600, ms(th, 600), th.mono) + 18;
+    const fx = Math.min(cw - 24 - fw, tx + textWidth(title, 23, 650, ms(th, 650), th.mono) + 10);
     const fs = th.chip(p, dark, "tertiary");
     b.push(pop(
       surface({ fill: fs.fill, rx: fs.rx, stroke: fs.stroke, strokeWidth: fs.strokeWidth, filter: fs.filter, shadow: fs.shadow }, fx, 98, fw, 22) +
@@ -278,26 +297,24 @@ export function card(ctx: Ctx, repo: Repo, index: number) {
       d0 + 0.25,
     ));
   }
-  wrap(v.text, 15, w - 48, 400, 2, scale, th.mono).forEach((line, n) => {
+  wrap(v.text, 15, cw - 48, 400, 2, ms(th, 400), th.mono).forEach((line, n) => {
     b.push(txt(tx, 142 + n * 21, line, 15, p.onSurfaceVariant, { cls: "up", delay: d0 + 0.18 + n * 0.05 }));
   });
+  // the footer is anchored to the bottom of the card body so it cannot spill out
+  const tagY = ch - 48;
   let x = tx;
   v.tags.forEach((tag, n) => {
-    const [g, cw] = chip(i, p, x, 184, tag, { delay: d0 + 0.3 + n * 0.06, h: 28, size: 13, style: "tonal", th, dark, scale, mono: th.mono });
+    const [g, chipW] = chip(i, p, x, tagY, tag, { delay: d0 + 0.3 + n * 0.06, h: 28, size: 13, style: "tonal", th, dark, scale: ms(th, 500), mono: th.mono });
     b.push(g);
-    x += cw + 6;
+    x += chipW + 6;
   });
   const label = String(repo.stars);
-  const sw = textWidth(label, 14, 600, scale, th.mono);
+  const sw = textWidth(label, 14, 600, ms(th, 600), th.mono);
   b.push(pop(
-    icon(i, "star", w - 24 - sw - 22, 188, 19, p.primary) + txt(w - 24, 203, label, 14, p.onSurfaceVariant, { weight: 600, anchor: "end" }),
+    icon(i, "star", cw - 24 - sw - 26, ch - 44, 19, p.primary) + txt(cw - 24, ch - 29, label, 14, p.onSurfaceVariant, { weight: 600, anchor: "end" }),
     d0 + 0.4,
   ));
-  const pad = th.cardPad ?? 0;
-  const body = b.join("");
-  return svg(w + pad * 2, h + pad * 2, pad ? `<g transform="translate(${pad} ${pad})">${body}</g>` : body, v.title, c.motion, {
-    th, dark, p, backdrop: pad === 0,
-  });
+  return svg(w, h, b.join(""), v.title, c.motion, { th, dark, p, backdrop: pad === 0 });
 }
 
 // Stats
@@ -311,7 +328,7 @@ export function stats(ctx: Ctx) {
   let row = 0;
   for (const [name, v] of langs) {
     const label = `${name} ${((100 * v) / total).toFixed(1)}%`.replace(".0%", "%");
-    const lw = 15 + textWidth(label, 14, 500, th.textScale ?? 1, th.mono) + 18;
+    const lw = 15 + textWidth(label, 14, 500, ms(th, 500), th.mono) + 18;
     if (x + lw > W - 28) {
       x = 28;
       row++;
@@ -335,12 +352,17 @@ export function stats(ctx: Ctx) {
     b.push(surface(th.tile(p, dark), tx, ty, 184, 96));
     b.push(`<path d="${framePath(th.iconShape ?? sh, tx + 34, ty + 34, 18, th.radius.cell)}" fill="${p.primaryContainer}"/>`);
     b.push(icon(i, ic, tx + 24, ty + 24, 20, p.onPrimaryContainer));
-    b.push(txt(tx + 62, ty + 46, String(value), 30, p.onSurface, { weight: 700 }));
-    b.push(txt(tx + 20, ty + 78, fit(label, 14, 156, 500, th.textScale ?? 1, th.mono), 14, p.onSurfaceVariant, { weight: 500 }));
+    const valueText = String(value);
+    const vw = textWidth(valueText, 30, 700, ms(th, 700), th.mono);
+    const vs = vw > 116 ? Math.max(16, (30 * 116) / vw) : 30;
+    b.push(txt(tx + 62, ty + 46, valueText, vs, p.onSurface, { weight: 700 }));
+    const lw = textWidth(label, 14, 500, ms(th, 500), th.mono);
+    const ls = lw > 156 ? Math.max(9, +((14 * 156) / lw).toFixed(2)) : 14;
+    b.push(txt(tx + 20, ty + 78, label, ls, p.onSurfaceVariant, { weight: 500 }));
     b.push("</g>");
   });
   const rx = 432;
-  b.push(txt(rx, 100, s.calendar, 14, p.onSurfaceVariant, { weight: 600, cls: "fade", delay: 0.1 }));
+  b.push(txt(rx, 100, fit(s.calendar, 14, W - rx - 28, 600, ms(th, 600), th.mono), 14, p.onSurfaceVariant, { weight: 600, cls: "fade", delay: 0.1 }));
   const gap = 6;
   const cw = (W - 28 - rx - gap * 6) / 7;
   const ch = 46;
@@ -370,7 +392,7 @@ export function stats(ctx: Ctx) {
   });
   if (s.showLanguages && langs.length) {
     const ly = 322;
-    b.push(txt(28, ly, s.languages, 14, p.onSurfaceVariant, { weight: 600, cls: "fade", delay: 0.3 }));
+    b.push(txt(28, ly, fit(s.languages, 14, W - 56, 600, ms(th, 600), th.mono), 14, p.onSurfaceVariant, { weight: 600, cls: "fade", delay: 0.3 }));
     const surf = p.surfaceContainerLow;
     const colors = [p.primary, p.tertiary, p.secondary, mix(p.primary, surf, 0.45), mix(p.tertiary, surf, 0.45), mix(p.secondary, surf, 0.45), p.outline, p.outlineVariant];
     const bw = W - 56;
@@ -392,7 +414,7 @@ export function stats(ctx: Ctx) {
       b.push(pop(dot + txt(lx + 15, ly2, label, 14, p.onSurfaceVariant, { weight: 500 }), 0.6 + n * 0.06, "fade"));
     });
   }
-  return svg(W, h, b.join(""), s.title, c.motion, { th, dark, p });
+  return svg(W, h, b.join(""), s.title, c.motion, { th, dark, p, backdrop: true });
 }
 
 // Streak
@@ -417,12 +439,13 @@ export function streak(ctx: Ctx) {
     b.push(icon(i, ic, tx + 38, ty + 36, 28, n ? p.onSecondaryContainer : p.onPrimary));
     const num = String(value);
     const fg = n ? p.onSurface : p.onPrimaryContainer;
+    const nw = textWidth(num, 40, 700, ms(th, 700), th.mono);
     b.push(txt(tx + 100, ty + 56, num, 40, fg, { weight: 700 }));
-    b.push(txt(tx + 108 + textWidth(num, 40, 700, th.textScale ?? 1, th.mono), ty + 56, s.days, 16, fg, { weight: 600 }));
-    b.push(txt(tx + 100, ty + 80, fit(label, 15, tw - 120, 500, th.textScale ?? 1, th.mono), 15, n ? p.onSurfaceVariant : p.onPrimaryContainer, { weight: 500 }));
+    b.push(txt(tx + 100 + nw + 10, ty + 56, s.days, 16, fg, { weight: 600 }));
+    b.push(txt(tx + 100, ty + 80, fit(label, 15, tw - 120, 500, ms(th, 500), th.mono), 15, n ? p.onSurfaceVariant : p.onPrimaryContainer, { weight: 500 }));
     b.push("</g>");
   });
-  return svg(W, h, b.join(""), s.title, c.motion, { th, dark, p });
+  return svg(W, h, b.join(""), s.title, c.motion, { th, dark, p, backdrop: true });
 }
 
 // Socials
@@ -450,6 +473,8 @@ function socialColors(p: Palette, icons: Icons, item: Social, fill: Config["soci
     return { bg: p.primary, fg: p.onPrimary, stroke: "" };
   }
   if (fill === "outlined" && th.embedFont) return { bg: "none", fg: p.onSurfaceVariant, stroke: p.outline };
+  // Tonal links follow the theme chip so they sit on the same surface as tags and
+  // stack chips instead of flashing a plain white plate over the card.
   const spec = th.chip(p, dark, fill === "filled" ? "filled" : fill === "outlined" ? "outlined" : "tonal");
   return { bg: spec.fill, fg: spec.fg, stroke: spec.stroke ?? "" };
 }
@@ -469,7 +494,7 @@ function socialPiece({ c, p, i, th, dark }: Ctx, item: Social, n: number): Piece
   if (st.variant === "chip") {
     const label = socialLabel(i, item);
     const h = 48;
-    const w = 18 + 24 + 10 + textWidth(label, 16, 600, th.textScale ?? 1, th.mono) + 20;
+    const w = 18 + 24 + 10 + textWidth(label, 16, 600, ms(th, 600), th.mono) + 20;
     const rx = th.embedFont ? (st.shape === "soft" ? 16 : 24) : th.radius.social;
     const frame = col.bg === "none"
       ? `<rect x="1" y="1" width="${(w - 2).toFixed(1)}" height="${h - 2}" rx="${rx}" fill="none"${col.stroke ? ` stroke="${col.stroke}" stroke-width="${th.line.hairline}"` : ""}/>`
@@ -493,7 +518,7 @@ function buttonPiece({ p, i, th, dark }: Ctx, btn: LinkButton, n: number): Piece
   const h = 56;
   const size = 17;
   const iw = btn.icon ? 32 : 0;
-  const w = 56 + iw + textWidth(btn.label, size, 600, th.textScale ?? 1, th.mono);
+  const w = 56 + iw + textWidth(btn.label, size, 600, ms(th, 600), th.mono);
   const spec = th.chip(p, dark, btn.style === "filled" ? "filled" : "tonal");
   let body = surface({ fill: spec.fill, rx: th.radius.button, stroke: spec.stroke, strokeWidth: spec.strokeWidth, filter: spec.filter, shadow: spec.shadow }, 0, 0, w, h);
   if (btn.icon) body += icon(i, btn.icon, 28, (h - 22) / 2, 22, spec.fg);
@@ -505,6 +530,8 @@ function buttonPiece({ p, i, th, dark }: Ctx, btn: LinkButton, n: number): Piece
 const PAD = 20;
 const GAP = 8;
 const CAP = 28;
+/** Transparent margin around loose pieces so their shadows/filters are not cut off. */
+const OUT = 12;
 
 export function rowFits(pieces: { w: number }[]) {
   return pieces.length > 0 && pieces.reduce((a, x) => a + x.w + GAP, 0) + CAP * 2 <= W;
@@ -513,20 +540,40 @@ export function rowFits(pieces: { w: number }[]) {
 function row(ctx: Ctx, prefix: string, pieces: Piece[], card: boolean) {
   const { c, p, th, dark } = ctx;
   const files: Record<string, string> = {};
+  const opts = { th, dark, p };
   if (!card || !rowFits(pieces)) {
-    pieces.forEach((x, n) => (files[`${prefix}-${n + 1}`] = svg(x.w, x.h, x.body, x.title, c.motion, { th, dark, p })));
+    pieces.forEach((x, n) => {
+      files[`${prefix}-${n + 1}`] = svg(
+        x.w + OUT * 2,
+        x.h + OUT * 2,
+        `<g transform="translate(${OUT} ${OUT})">${x.body}</g>`,
+        x.title,
+        c.motion,
+        opts,
+      );
+    });
     return files;
   }
   const h = Math.max(...pieces.map((x) => x.h)) + PAD * 2;
   const cap = (W - pieces.reduce((a, x) => a + x.w + GAP, 0)) / 2;
-  const bg = th.rowFill(p, dark);
   const spec = th.row(p, dark);
-  const opts = { th, dark, p };
-  files[`${prefix}-l`] = svg(cap, h, surface(spec, 0, 0, cap + 40, h), "", c.motion, opts);
-  files[`${prefix}-r`] = svg(cap, h, surface(spec, -40, 0, cap + 40, h), "", c.motion, opts);
+  // Every piece paints the same full-width row surface at its own offset, so the
+  // outline, fill, radius and shadow stay continuous across the separate images.
+  // The theme backdrop is sliced the same way; otherwise a glass row would lose its
+  // tint wherever a piece starts, and the retro dot phase would jump per image.
+  const bd = th.backdrop ? th.backdrop(p, dark, W, h) : "";
+  files[`${prefix}-l`] = svg(cap, h, bd + surface(spec, 0, 0, W, h), "", c.motion, opts);
+  files[`${prefix}-r`] =
+    svg(cap, h, `<g transform="translate(${-(W - cap)} 0)">${bd}</g>` + surface(spec, cap - W, 0, W, h), "", c.motion, opts);
+  let x0 = cap;
   pieces.forEach((x, n) => {
     const w = x.w + GAP;
-    files[`${prefix}-${n + 1}`] = svg(w, h, `<rect width="${w + 1}" height="${h}" fill="${bg}"/><g transform="translate(${GAP / 2} ${(h - x.h) / 2})">${x.body}</g>`, x.title, c.motion, opts);
+    const body =
+      `<g transform="translate(${-x0} 0)">${bd}</g>` +
+      surface(spec, -x0, 0, W, h) +
+      `<g transform="translate(${GAP / 2} ${(h - x.h) / 2})">${x.body}</g>`;
+    files[`${prefix}-${n + 1}`] = svg(w, h, body, x.title, c.motion, opts);
+    x0 += w;
   });
   return files;
 }
@@ -556,6 +603,6 @@ export function wave({ c, p, th, dark }: Ctx) {
 export function credit({ p, th, dark }: Ctx) {
   const label = "Made with persona-gh";
   const size = 12;
-  const w = textWidth(label, size, 500, th.textScale ?? 1, th.mono) + 4;
+  const w = textWidth(label, size, 500, ms(th, 500), th.mono) + 4;
   return svg(w, 18, txt(2, 13, label, size, p.onSurfaceVariant, { weight: 500, extra: ' opacity=".7"' }), label, false, { th, dark, p });
 }
